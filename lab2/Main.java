@@ -49,15 +49,6 @@ class Utils {
 
         return min;
     }
-
-    public static void printList(ArrayList<String> strArray) {
-
-        System.out.print("Produced data: [");
-        for (int i = 0; i < strArray.size(); i++) {
-            System.out.print(strArray.get(i) + ",");
-        }
-        System.out.print("] ");
-    }
 }
 
 
@@ -83,7 +74,7 @@ class Buffer {
         }
     }
 
-    public synchronized void produce(String dataItem) {
+    public synchronized void upload(String dataItem) {
 
         int min = Utils.getMin(usageInfo);
 
@@ -101,13 +92,13 @@ class Buffer {
         producedData.set(index, dataItem);
         
         dataProducedCount++;
-        System.out.println(String.format("[Producer]: produced item %03d", dataProducedCount));
-        Utils.printList(producedData);
+        System.out.print(String.format("[Producer]: uploaded item %03d ", dataProducedCount));
+        printBuffer();
 
         this.notifyAll();
     }
 
-    public String consume(int userIndex) {
+    public String access(int userIndex) {
         int dataConsumedCount = usageInfo.get(userIndex);
 
         // check if the user can consume
@@ -120,13 +111,23 @@ class Buffer {
                 }
             }
             usageInfo.set(userIndex, ++dataConsumedCount);
-            System.out.println(String.format("[User%d]: consumed item %03d", userIndex, dataConsumedCount));
-            Utils.printList(producedData);
+            System.out.println(String.format("[User%d]: accessed item %03d", userIndex, dataConsumedCount));
             this.notifyAll();
         }
 
         return producedData.get( (dataConsumedCount - 1) % bufferSize );
     }
+
+    public void printBuffer() {
+
+        System.out.print("(Buffer: [" + producedData.get(0));
+
+        for (int i = 1; i < producedData.size(); i++) {
+            System.out.print(", " + producedData.get(i));
+        }
+        System.out.println("])");
+    }
+
 }
 
 
@@ -145,10 +146,10 @@ class Producer extends Thread {
     public void run() {
         while (dataProducedCount < dataItemTotalCount) {
             String dataItem = String.format("%03d", dataProducedCount + 1);
-            buffer.produce(dataItem);
+            buffer.upload(dataItem);
             dataProducedCount++;
         }
-        System.out.println("[Producer]: all " + dataItemTotalCount + " items were produced.");
+        System.out.println("[Producer]: uploaded all " + dataItemTotalCount + " items");
     }
 
     public static void begin(Buffer buffer) {
@@ -175,10 +176,10 @@ class User extends Thread {
     // consume 
     public void run() {
         while (dataConsumedCount < Producer.dataItemTotalCount) {
-            currentDataItem = buffer.consume(userIndex);
+            currentDataItem = buffer.access(userIndex);
             dataConsumedCount++;
         }
-        System.out.println("[User" + userIndex + "]: consumed all " + Producer.dataItemTotalCount + " items");
+        System.out.println("[User" + userIndex + "]: accessed all " + Producer.dataItemTotalCount + " items");
     }
 
     public static void begin(Buffer buffer) {
