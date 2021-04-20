@@ -49,6 +49,15 @@ class Utils {
 
         return min;
     }
+
+    public static void printList(ArrayList<String> strArray) {
+
+        System.out.print("Produced data: [");
+        for (int i = 0; i < strArray.size(); i++) {
+            System.out.print(strArray.get(i) + ",");
+        }
+        System.out.print("] ");
+    }
 }
 
 
@@ -88,9 +97,12 @@ class Buffer {
             }
         }
 
-        producedData.add(dataItem);
+        int index = dataProducedCount % bufferSize;
+        producedData.set(index, dataItem);
+        
         dataProducedCount++;
         System.out.println(String.format("[Producer]: produced item %03d", dataProducedCount));
+        Utils.printList(producedData);
 
         this.notifyAll();
     }
@@ -109,10 +121,11 @@ class Buffer {
             }
             usageInfo.set(userIndex, ++dataConsumedCount);
             System.out.println(String.format("[User%d]: consumed item %03d", userIndex, dataConsumedCount));
+            Utils.printList(producedData);
             this.notifyAll();
         }
 
-        return producedData.get(dataConsumedCount - 1);
+        return producedData.get( (dataConsumedCount - 1) % bufferSize );
     }
 }
 
@@ -131,7 +144,7 @@ class Producer extends Thread {
     // produce 
     public void run() {
         while (dataProducedCount < dataItemTotalCount) {
-            String dataItem = String.format("%03d", dataProducedCount);
+            String dataItem = String.format("%03d", dataProducedCount + 1);
             buffer.produce(dataItem);
             dataProducedCount++;
         }
