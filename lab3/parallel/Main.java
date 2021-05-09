@@ -46,20 +46,20 @@ import java.util.Arrays;
 
 public class Main {
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
         int rows = 5;
         int cols = 5;
         int iterCount = 5;
         int stage = 2;
-		int threadCount = 5;
+        int threadCount = 5;
         
         GameOfLife game = new GameOfLife(rows, cols, iterCount);
         game.initStage(stage);
 
         game.printState(true);
 
-		Barrier barrier = new Barrier(game, threadCount);
+        Barrier barrier = new Barrier(game, threadCount);
 
         Worker w1 = new Worker(1, barrier, game, 0, 0);
         Worker w2 = new Worker(2, barrier, game, 1, 1);
@@ -73,34 +73,34 @@ public class Main {
         w4.start();
         w5.start();
 
-		try {
-			w1.join(); 
-			w2.join(); 
-			w3.join();
-			w4.join();
-			w5.join();
-			
-		} catch (InterruptedException exc) {
-			exc.printStackTrace();
-		}
+        try {
+            w1.join(); 
+            w2.join(); 
+            w3.join();
+            w4.join();
+            w5.join();
+            
+        } catch (InterruptedException exc) {
+            exc.printStackTrace();
+        }
     }
 }
 
 class Barrier {
-	
-	private int value;
-	private int tempValue = 0;
-	
-	private int threads = 0;
-	private int expectedThreads;
+    
+    private int value;
+    private int tempValue = 0;
+    
+    private int threads = 0;
+    private int expectedThreads;
 
     private GameOfLife game;
-	
-	public Barrier(GameOfLife game, int expectedThreads) {
+    
+    public Barrier(GameOfLife game, int expectedThreads) {
         this.game = game;
-		this.expectedThreads = expectedThreads;
-		this.value = 0;
-	}
+        this.expectedThreads = expectedThreads;
+        this.value = 0;
+    }
 
     public synchronized void waitBarrier(int stage) throws InterruptedException {
         //1. caller connects and we add his value
@@ -138,7 +138,7 @@ class Worker extends Thread {
 
     public Worker(int threadNo, Barrier barrier, GameOfLife game, int firstRow, int lastRow) {
         this.threadNo = threadNo;
-		this.barrier = barrier;
+        this.barrier = barrier;
         this.game = game;
         this.firstRow = firstRow;
         this.lastRow = lastRow;
