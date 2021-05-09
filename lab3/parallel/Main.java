@@ -40,110 +40,124 @@
  *
  */
 
-//package lab3;
+//package lab3.parallel;
 
 import java.util.Arrays;
 
 public class Main {
 
 	public static void main(String[] args) {
+
         int rows = 5;
         int cols = 5;
         int iterCount = 5;
         int stage = 2;
+		int threadCount = 5;
         
-        GameOfLife game = new GameOfLife(rows, cols);
+        GameOfLife game = new GameOfLife(rows, cols, iterCount);
         game.initStage(stage);
 
-        //System.out.println("\033[2J\033[H");
-        game.printState();
+        game.printState(true);
 
-        for (int i = 0; i < iterCount; i++) {
-            try {
-                Thread.sleep(1000);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
+		Barrier barrier = new Barrier(game, threadCount);
+
+        Worker w1 = new Worker(1, barrier, game, 0, 0);
+        Worker w2 = new Worker(2, barrier, game, 1, 1);
+        Worker w3 = new Worker(3, barrier, game, 2, 2);
+        Worker w4 = new Worker(4, barrier, game, 3, 3);
+        Worker w5 = new Worker(5, barrier, game, 4, 4);
+
+        w1.start(); 
+        w2.start();
+        w3.start();
+        w4.start();
+        w5.start();
+
+		try {
+			w1.join(); 
+			w2.join(); 
+			w3.join();
+			w4.join();
+			w5.join();
+			
+		} catch (InterruptedException exc) {
+			exc.printStackTrace();
+		}
+    }
+}
+
+class Barrier {
+	
+	private int value;
+	private int tempValue = 0;
+	
+	private int threads = 0;
+	private int expectedThreads;
+
+    private GameOfLife game;
+	
+	public Barrier(GameOfLife game, int expectedThreads) {
+        this.game = game;
+		this.expectedThreads = expectedThreads;
+		this.value = 0;
+	}
+
+    public synchronized void waitBarrier(int stage) throws InterruptedException {
+        //1. caller connects and we add his value
+        threads++;
+        
+        //2. now wait for everyone to connect
+        if (threads != expectedThreads) {
+            wait();
+        } else { // 3. IF everyone is connected
+            if (stage == 1) {
+                game.printNeighbourGrid();
+            } else if (stage == 2) {
+                game.printState(false);
             }
 
-            try {
-                Worker w1 = new Worker(1, game, 0, 0);
-                Worker w2 = new Worker(2, game, 1, 1);
-                Worker w3 = new Worker(3, game, 2, 2);
-                Worker w4 = new Worker(4, game, 3, 3);
-                Worker w5 = new Worker(5, game, 4, 4);
-                
-                w1.start(); 
-                w2.start();
-                w3.start();
-                w4.start();
-                w5.start();
-
-                w1.join(); 
-                w2.join();
-                w3.join();
-                w4.join();
-                w5.join();
-
-                //game.printNeighbourGrid();
-
-                game.taskNo++;
-
-                Worker w01 = new Worker(6, game, 0, 0);
-                Worker w02 = new Worker(7, game, 1, 1);
-                Worker w03 = new Worker(8, game, 2, 2);
-                Worker w04 = new Worker(9, game, 3, 3);
-                Worker w05 = new Worker(10, game, 4, 4);
-
-                w01.start(); 
-                w02.start();
-                w03.start();
-                w04.start();
-                w05.start();
-
-                w01.join(); 
-                w02.join();
-                w03.join();
-                w04.join();
-                w05.join();
-                
-                game.taskNo--;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            //System.out.println("\033[2J\033[H");
-            game.printState();
+            //tell everyone
+            notifyAll();
+            
+            //reset the thread count
+            threads = 0;
         }
+        return;
     }
 }
 
 class Worker extends Thread {
 
-    private int no;
-    public int firstRow;
-    public int lastRow;
+    private int threadNo;
+    private int firstRow;
+    private int lastRow;
+    private Barrier barrier;
 
+    // TODO make private?
     GameOfLife game;
 
-    public Worker(int no, GameOfLife game, int firstRow, int lastRow) {
-        this.no = no;
+    public Worker(int threadNo, Barrier barrier, GameOfLife game, int firstRow, int lastRow) {
+        this.threadNo = threadNo;
+		this.barrier = barrier;
         this.game = game;
         this.firstRow = firstRow;
         this.lastRow = lastRow;
     }
 
     public void run() {
-        switch (game.taskNo) {
-        case 1:       
-            game.updateNeighbourCount(firstRow, lastRow);
-            break;
-        case 2:       
-            game.updateCells(firstRow, lastRow);
-            break;
-        default:
-            System.out.println("ERROR: There is no such task for a worker");
-            System.exit(1);
+        try {
+            for (int i = 1; i <= game.iterCount; i++) {
+                Thread.sleep(1000);
+
+                game.updateNeighbourCount(firstRow, lastRow);
+                barrier.waitBarrier(1);
+
+                game.updateCells(firstRow, lastRow);
+                barrier.waitBarrier(2);
+            }
+
+        } catch(InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
@@ -153,13 +167,15 @@ class GameOfLife {
     private int cols;
 
     private int grid[][];
-    public int neighbourGrid[][];
-    
+    private int neighbourGrid[][];
+
+    public int iterCount;
     public int taskNo;
 
-    public GameOfLife(int rows, int cols) {
+    public GameOfLife(int rows, int cols, int iterCount) {
         this.rows = rows;
         this.cols = cols;
+        this.iterCount = iterCount;
         this.grid = new int[rows][cols];
         this.neighbourGrid = new int[rows][cols];
         this.taskNo = 1;
@@ -239,7 +255,11 @@ class GameOfLife {
         }
     }
 
-    public void printState() {
+    public void printState(boolean clearScreen) {
+        if (clearScreen) {
+            System.out.println("\033[2J\033[H");
+        }
+
         for (int i = 0; i < cols; i++) {
             System.out.print("._");
         }
@@ -259,6 +279,9 @@ class GameOfLife {
 
     public void initStage(int stage) {
         switch (stage) {
+        case 0:       // Random stage
+            // TODO random stage
+            // (...)
         case 1:       // Block (period = 1, stays still)
             // TODO: min rows & cols validation (4x4)
             grid[1][1] = 1;

@@ -40,7 +40,7 @@
  *
  */
 
-//package lab3;
+//package lab3.sequential;
 
 public class Main {
 
