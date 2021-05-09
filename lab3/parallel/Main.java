@@ -40,9 +40,9 @@
  *
  */
 
-//package lab3.parallel;
+package lab3.parallel;
 
-import java.util.Arrays;
+import java.util.Random;
 
 public class Main {
 
@@ -51,7 +51,7 @@ public class Main {
         int rows = 5;
         int cols = 5;
         int iterCount = 5;
-        int stage = 2;
+        int stage = 0;
         int threadCount = 5;
         
         GameOfLife game = new GameOfLife(rows, cols, iterCount);
@@ -88,9 +88,6 @@ public class Main {
 
 class Barrier {
     
-    private int value;
-    private int tempValue = 0;
-    
     private int threads = 0;
     private int expectedThreads;
 
@@ -99,7 +96,6 @@ class Barrier {
     public Barrier(GameOfLife game, int expectedThreads) {
         this.game = game;
         this.expectedThreads = expectedThreads;
-        this.value = 0;
     }
 
     public synchronized void waitBarrier(int stage) throws InterruptedException {
@@ -113,7 +109,8 @@ class Barrier {
             if (stage == 1) {
                 game.printNeighbourGrid();
             } else if (stage == 2) {
-                game.printState(false);
+                game.updateGrid();
+                game.printState(true);
             }
 
             //tell everyone
@@ -133,8 +130,7 @@ class Worker extends Thread {
     private int lastRow;
     private Barrier barrier;
 
-    // TODO make private?
-    GameOfLife game;
+    private GameOfLife game;
 
     public Worker(int threadNo, Barrier barrier, GameOfLife game, int firstRow, int lastRow) {
         this.threadNo = threadNo;
@@ -150,7 +146,7 @@ class Worker extends Thread {
                 Thread.sleep(1000);
 
                 game.updateNeighbourCount(firstRow, lastRow);
-                barrier.waitBarrier(1);
+                //barrier.waitBarrier(1);
 
                 game.updateCells(firstRow, lastRow);
                 barrier.waitBarrier(2);
@@ -168,17 +164,22 @@ class GameOfLife {
 
     private int grid[][];
     private int neighbourGrid[][];
-
+    private int newGrid[][];
     public int iterCount;
-    public int taskNo;
 
     public GameOfLife(int rows, int cols, int iterCount) {
         this.rows = rows;
         this.cols = cols;
         this.iterCount = iterCount;
         this.grid = new int[rows][cols];
+        this.newGrid = new int[rows][cols];
         this.neighbourGrid = new int[rows][cols];
-        this.taskNo = 1;
+    }
+
+    public void updateGrid() {
+        int temp[][] = grid;
+        grid = newGrid;
+        newGrid = temp;
     }
 
     public void updateNeighbourCount(int firstRow, int lastRow) {
@@ -229,12 +230,12 @@ class GameOfLife {
                 int ncc = neighbourGrid[i][j];
 
                 if (ncc < 2 || ncc > 3) {
-                    grid[i][j] = 0;
+                    newGrid[i][j] = 0;
                 } else if (ncc == 2) {
                     if (grid[i][j] == 1)
-                        grid[i][j] = 1;
+                        newGrid[i][j] = 1;
                 } else if (ncc == 3) {
-                    grid[i][j] = 1;
+                    newGrid[i][j] = 1;
                 }
             }
         }
@@ -277,26 +278,45 @@ class GameOfLife {
         }
     }
 
+    private void validateGrid(int dimension) {
+        if (rows < dimension || cols < dimension) {
+            System.out.println(
+                    "ERROR: The number of rows and/or "
+                    + "columns is too small for this stage");
+            System.exit(1);
+        }
+    }
+
     public void initStage(int stage) {
         switch (stage) {
         case 0:       // Random stage
-            // TODO random stage
-            // (...)
+            Random rand = new Random();
+            rand.setSeed(0);
+
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    grid[i][j] = rand.nextInt(2);
+                }
+            }
+            break;
         case 1:       // Block (period = 1, stays still)
-            // TODO: min rows & cols validation (4x4)
+            validateGrid(4);
+            // --------------
             grid[1][1] = 1;
             grid[1][2] = 1;
             grid[2][1] = 1;
             grid[2][2] = 1;
             break;
         case 2:       // Blinker (period = 2, stays still)
-            // TODO: min rows & cols validation (5x5)
+            validateGrid(5);
+            // --------------
             grid[1][2] = 1;
             grid[2][2] = 1;
             grid[3][2] = 1;
             break;
         case 3:       // Toad (period = 2, stays still)
-            // TODO: min rows & cols validation (6x6)
+            validateGrid(6);
+            // --------------
             grid[1][3] = 1;
             grid[2][1] = 1;
             grid[2][4] = 1;
@@ -305,7 +325,7 @@ class GameOfLife {
             grid[4][2] = 1;
             break;
         case 4:       // Pulsar (period = 3, stays still)
-            // TODO: min rows & cols validation (17x17)
+            validateGrid(17);
             // --------------
             grid[2][4] =   1;
             grid[2][5] =   1;
@@ -336,41 +356,41 @@ class GameOfLife {
             grid[14][12] = 1;
             // --------------
 
-            // ==============
+            // --------------
             grid[4][2] =   1;
             grid[4][7] =   1;
             grid[4][9] =   1;
             grid[4][14] =  1;
-            // ==============
+            // --------------
             grid[5][2] =   1;
             grid[5][7] =   1;
             grid[5][9] =   1;
             grid[5][14] =  1;
-            // ==============
+            // --------------
             grid[6][2] =   1;
             grid[6][7] =   1;
             grid[6][9] =   1;
             grid[6][14] =  1;
-            // ==============
+            // --------------
             grid[10][2] =  1;
             grid[10][7] =  1;
             grid[10][9] =  1;
             grid[10][14] = 1;
-            // ==============
+            // --------------
             grid[11][2] =  1;
             grid[11][7] =  1;
             grid[11][9] =  1;
             grid[11][14] = 1;
-            // ==============
+            // --------------
             grid[12][2] =  1;
             grid[12][7] =  1;
             grid[12][9] =  1;
             grid[12][14] = 1;
-            // ==============
-
+            // --------------
             break;
         case 5:       // Glider (period = 4, moves southeast)
-            // TODO: min rows & cols validation (4x4)
+            validateGrid(4);
+            // --------------
             grid[0][2] = 1;
             grid[1][0] = 1;
             grid[1][2] = 1;
@@ -378,26 +398,26 @@ class GameOfLife {
             grid[2][2] = 1;
             break;
         case 6:       // Middle-weight spaceship (MWSS) (period = 4, moves east)
-            // TODO: min rows & cols validation (10x10)
+            validateGrid(10);
+            // --------------
             grid[3][5] = 1;
             grid[3][6] = 1;
-
+            // --------------
             grid[4][2] = 1;
             grid[4][3] = 1;
             grid[4][4] = 1;
             grid[4][6] = 1;
             grid[4][7] = 1;
-
+            // --------------
             grid[5][2] = 1;
             grid[5][3] = 1;
             grid[5][4] = 1;
             grid[5][5] = 1;
             grid[5][6] = 1;
-
+            // --------------
             grid[6][3] = 1;
             grid[6][4] = 1;
             grid[6][5] = 1;
-
             break;
         default:
             System.out.println("ERROR: Unsupported initial stage");
