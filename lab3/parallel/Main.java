@@ -40,7 +40,7 @@
  *
  */
 
-package lab3.parallel;
+//package lab3.parallel;
 
 import java.util.Random;
 

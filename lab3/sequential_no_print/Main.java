@@ -40,21 +40,32 @@
  *
  */
 
-//package lab3.sequential;
+//package lab3.sequential_no_print;
 
 import java.util.Random;
 
 public class Main {
 
 	public static void main(String[] args) {
-        int rows = 5;
-        int cols = 5;
-        int iterCount = 10;
+        int rows = 200;
+        int cols = 200;
+        int iterCount = 300000;
         int stage = 0;
         
         GameOfLife game = new GameOfLife(rows, cols);
         game.initStage(stage);
+        //game.printState();
+       
+        long start = System.currentTimeMillis();
+        
         game.run(iterCount);
+
+        long finish = System.currentTimeMillis();
+        long timeElapsed = finish - start;
+
+        game.printState();
+
+        System.out.println("Time: " + timeElapsed + "ms");
     }
 }
 
@@ -124,7 +135,7 @@ class GameOfLife {
         }
     }
 
-    private void printState() {
+    public void printState() {
         for (int i = 0; i < cols; i++) {
             System.out.print("._");
         }
@@ -143,21 +154,20 @@ class GameOfLife {
     }
 
     public void run(int iterCount) {
-        System.out.println("\033[2J\033[H");
-        printState();
+        //System.out.println("\033[2J\033[H");
+        //printState();
 
         for (int i = 0; i < iterCount; i++) {
-            try {
-                Thread.sleep(1000);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+            //try {
+                //Thread.sleep(1000);
+            //} catch(InterruptedException ex) {
+                //Thread.currentThread().interrupt();
+            //}
 
             updateCells();
 
-            System.out.println("\033[2J\033[H");
-
-            printState();
+            //System.out.println("\033[2J\033[H");
+            //printState();
         }
     }
 
