@@ -47,9 +47,9 @@ import java.util.Random;
 public class Main {
 
 	public static void main(String[] args) {
-        int rows = 200;
-        int cols = 200;
-        int iterCount = 300000;
+        int rows = 100;
+        int cols = 100;
+        int iterCount = 100_000;
         int stage = 0;
         
         GameOfLife game = new GameOfLife(rows, cols);

@@ -48,11 +48,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        int rows = 200;
-        int cols = 200;
-        int iterCount = 300000;
+        int rows = 100;
+        int cols = 100;
+        int iterCount = 100_000;
         int stage = 0;
-        int threadCount = 20;
+        int threadCount = 10;
         
         GameOfLife game = new GameOfLife(rows, cols, iterCount);
         game.initStage(stage);
@@ -63,18 +63,21 @@ public class Main {
 
         Barrier barrier = new Barrier(game, threadCount);
 
+        // ============= 5 threads 10x10 ================
         //Worker w1 = new Worker(1, barrier, game, 0, 1);
         //Worker w2 = new Worker(2, barrier, game, 2, 3);
         //Worker w3 = new Worker(3, barrier, game, 4, 5);
         //Worker w4 = new Worker(4, barrier, game, 6, 7);
         //Worker w5 = new Worker(5, barrier, game, 8, 9);
 
+        // ============= 5 threads 100x100  ==============
         //Worker w1 = new Worker(1, barrier, game, 0, 19);
         //Worker w2 = new Worker(2, barrier, game, 20, 39);
         //Worker w3 = new Worker(3, barrier, game, 40, 59);
         //Worker w4 = new Worker(4, barrier, game, 60, 79);
         //Worker w5 = new Worker(5, barrier, game, 80, 99);
 
+        // ============= 10 threads 100x100  =============
         Worker w1 = new Worker(1, barrier, game, 0, 9);
         Worker w2 = new Worker(2, barrier, game, 10, 19);
         Worker w3 = new Worker(3, barrier, game, 20, 29);
@@ -86,23 +89,29 @@ public class Main {
         Worker w9 = new Worker(9, barrier, game, 80, 89);
         Worker w10 = new Worker(10, barrier, game, 90, 99);
 
-        Worker w11 = new Worker(11, barrier, game, 100, 109);
-        Worker w12 = new Worker(12, barrier, game, 110, 119);
-        Worker w13 = new Worker(13, barrier, game, 120, 129);
-        Worker w14 = new Worker(14, barrier, game, 130, 139);
-        Worker w15 = new Worker(15, barrier, game, 140, 149);
-        Worker w16 = new Worker(16, barrier, game, 150, 159);
-        Worker w17 = new Worker(17, barrier, game, 160, 169);
-        Worker w18 = new Worker(18, barrier, game, 170, 179);
-        Worker w19 = new Worker(19, barrier, game, 180, 189);
-        Worker w20 = new Worker(20, barrier, game, 190, 199);
+        // ============= 20 threads 200x200  =============
+        //Worker w1 = new Worker(1, barrier, game, 0, 9);
+        //Worker w2 = new Worker(2, barrier, game, 10, 19);
+        //Worker w3 = new Worker(3, barrier, game, 20, 29);
+        //Worker w4 = new Worker(4, barrier, game, 30, 39);
+        //Worker w5 = new Worker(5, barrier, game, 40, 49);
+        //Worker w6 = new Worker(6, barrier, game, 50, 59);
+        //Worker w7 = new Worker(7, barrier, game, 60, 69);
+        //Worker w8 = new Worker(8, barrier, game, 70, 79);
+        //Worker w9 = new Worker(9, barrier, game, 80, 89);
+        //Worker w10 = new Worker(10, barrier, game, 90, 99);
+        //Worker w11 = new Worker(11, barrier, game, 100, 109);
+        //Worker w12 = new Worker(12, barrier, game, 110, 119);
+        //Worker w13 = new Worker(13, barrier, game, 120, 129);
+        //Worker w14 = new Worker(14, barrier, game, 130, 139);
+        //Worker w15 = new Worker(15, barrier, game, 140, 149);
+        //Worker w16 = new Worker(16, barrier, game, 150, 159);
+        //Worker w17 = new Worker(17, barrier, game, 160, 169);
+        //Worker w18 = new Worker(18, barrier, game, 170, 179);
+        //Worker w19 = new Worker(19, barrier, game, 180, 189);
+        //Worker w20 = new Worker(20, barrier, game, 190, 199);
 
-        //w1.start(); 
-        //w2.start();
-        //w3.start();
-        //w4.start();
-        //w5.start();
-
+        // ================== 1-20 threads ====================
         w1.start(); 
         w2.start();
         w3.start();
@@ -113,24 +122,19 @@ public class Main {
         w8.start();
         w9.start();
         w10.start();
-        w11.start();
-        w12.start();
-        w13.start();
-        w14.start();
-        w15.start();
-        w16.start();
-        w17.start();
-        w18.start();
-        w19.start();
-        w20.start();
+        //w11.start();
+        //w12.start();
+        //w13.start();
+        //w14.start();
+        //w15.start();
+        //w16.start();
+        //w17.start();
+        //w18.start();
+        //w19.start();
+        //w20.start();
 
         try {
-            //w1.join(); 
-            //w2.join(); 
-            //w3.join();
-            //w4.join();
-            //w5.join();
-
+            // ================== 1-20 threads ====================
             w1.join(); 
             w2.join(); 
             w3.join();
@@ -141,16 +145,16 @@ public class Main {
             w8.join();
             w9.join();
             w10.join();
-            w11.join();
-            w12.join();
-            w13.join();
-            w14.join();
-            w15.join();
-            w16.join();
-            w17.join();
-            w18.join();
-            w19.join();
-            w20.join();
+            //w11.join();
+            //w12.join();
+            //w13.join();
+            //w14.join();
+            //w15.join();
+            //w16.join();
+            //w17.join();
+            //w18.join();
+            //w19.join();
+            //w20.join();
             
         } catch (InterruptedException exc) {
             exc.printStackTrace();
@@ -188,7 +192,7 @@ class Barrier {
             if (stage == 1) {
                 //game.printNeighbourGrid();
             } else if (stage == 2) {
-                game.updateGrid();
+                //game.updateGrid();
                 //game.printState(false);
             }
 
@@ -225,6 +229,7 @@ class Worker extends Thread {
                 //Thread.sleep(1000);
 
                 game.updateNeighbourCount(firstRow, lastRow);
+
                 //barrier.waitBarrier(1);
 
                 game.updateCells(firstRow, lastRow);
