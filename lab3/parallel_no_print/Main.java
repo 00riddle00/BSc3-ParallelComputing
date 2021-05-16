@@ -35,7 +35,7 @@
 
  * Eksperimentiškai nustatyti algoritmo spartinimo, plečiamumo (scaling) bei vykd. laiko
  * priklausomybės nuo "darbų" dydžio (grain size) charakteristikas. Sugebėti pagrįsti
- * gautuosius rezultaþNtus. Atsiskaitant, pateikti (motyvuotą) sprendimo aprašą, įtraukiant
+ * gautuosius rezultatus. Atsiskaitant, pateikti (motyvuotą) sprendimo aprašą, įtraukiant
  * minetųjų priklausomybių grafikus
  *
  */
@@ -53,6 +53,12 @@ public class Main {
         int iterCount = 100_000;
         int stage = 0;
         int threadCount = 10;
+
+        //int rows = 10;
+        //int cols = 10;
+        //int iterCount = 10;
+        //int stage = 5;
+        //int threadCount = 5;
         
         GameOfLife game = new GameOfLife(rows, cols, iterCount);
         game.initStage(stage);
@@ -192,7 +198,7 @@ class Barrier {
             if (stage == 1) {
                 //game.printNeighbourGrid();
             } else if (stage == 2) {
-                //game.updateGrid();
+                game.iterNo++;
                 //game.printState(false);
             }
 
@@ -227,12 +233,11 @@ class Worker extends Thread {
         try {
             for (int i = 1; i <= game.iterCount; i++) {
                 //Thread.sleep(1000);
+                
+                game.updateNeighbourCount(firstRow, lastRow, i);
+                barrier.waitBarrier(1);
 
-                game.updateNeighbourCount(firstRow, lastRow);
-
-                //barrier.waitBarrier(1);
-
-                game.updateCells(firstRow, lastRow);
+                game.updateCells(firstRow, lastRow, i);
                 barrier.waitBarrier(2);
             }
 
@@ -246,94 +251,136 @@ class GameOfLife {
     private int rows;
     private int cols;
 
-    private int grid[][];
     private int neighbourGrid[][];
-    private int newGrid[][];
+    private int grid[][];
+    private int tempGrid[][];
     public int iterCount;
+    public int iterNo;
 
     public GameOfLife(int rows, int cols, int iterCount) {
         this.rows = rows;
         this.cols = cols;
         this.iterCount = iterCount;
         this.grid = new int[rows][cols];
-        this.newGrid = new int[rows][cols];
+        this.tempGrid = new int[rows][cols];
         this.neighbourGrid = new int[rows][cols];
     }
 
-    private int[][] deepCopy(int[][] A) {
-        int[][] B = new int[A.length][A[0].length];
-        for (int x = 0; x < A.length; x++) {
-            for (int y = 0; y < A[0].length; y++) {
-                if (A[x][y] == 1) { //write only when necessary
-                    B[x][y] = A[x][y];
+    public void updateNeighbourCount(int firstRow, int lastRow, int iteration) {
+        // neighbour cell count
+        int ncc;
+
+        if (iteration % 2 == 1) {
+            for (int i = firstRow; i <= lastRow; i++) {
+                for (int j = 0; j < cols; j++) {
+
+                    // i = row, j = column
+                    ncc = 0;
+
+                    if ((j-1) >= 0)
+                        ncc += grid[i][j-1];
+
+                    if ((j+1) < cols)
+                        ncc += grid[i][j+1];
+
+                    if ((i-1) >= 0) {
+                        ncc += grid[i-1][j];
+
+                        if ((j-1) >= 0) 
+                            ncc += grid[i-1][j-1];
+
+                        if ((j+1) < cols)
+                            ncc += grid[i-1][j+1];
+                    }
+
+                    if ((i+1) < rows) {
+                        ncc += grid[i+1][j];
+                        if ((j-1) >= 0)
+                            ncc += grid[i+1][j-1];
+
+                        if ((j+1) < cols)
+                            ncc += grid[i+1][j+1];
+                    }
+
+                    neighbourGrid[i][j] = ncc;
+                }
+            }
+        } else {
+            for (int i = firstRow; i <= lastRow; i++) {
+                for (int j = 0; j < cols; j++) {
+
+                    // i = row, j = column
+                    ncc = 0;
+
+                    if ((j-1) >= 0)
+                        ncc += tempGrid[i][j-1];
+
+                    if ((j+1) < cols)
+                        ncc += tempGrid[i][j+1];
+
+                    if ((i-1) >= 0) {
+                        ncc += tempGrid[i-1][j];
+
+                        if ((j-1) >= 0) 
+                            ncc += tempGrid[i-1][j-1];
+
+                        if ((j+1) < cols)
+                            ncc += tempGrid[i-1][j+1];
+                    }
+
+                    if ((i+1) < rows) {
+                        ncc += tempGrid[i+1][j];
+                        if ((j-1) >= 0)
+                            ncc += tempGrid[i+1][j-1];
+
+                        if ((j+1) < cols)
+                            ncc += tempGrid[i+1][j+1];
+                    }
+
+                    neighbourGrid[i][j] = ncc;
                 }
             }
         }
-        return B;
     }
 
-    public void updateGrid() {
-        grid = deepCopy(newGrid);
-        newGrid = new int[rows][cols];
-    }
-
-    public void updateNeighbourCount(int firstRow, int lastRow) {
-        for (int i = firstRow; i <= lastRow; i++) {
-            for (int j = 0; j < cols; j++) {
-                updateCellNeighbourCount(i, j);
-            }
-        }
-    }
-
-    private void updateCellNeighbourCount(int i, int j) {
-        // i = row, j = column
-
+    public void updateCells(int firstRow, int lastRow, int iteration) {
         // neighbour cell count
-        int ncc = 0;
+        int ncc;
 
-        if ((j-1) >= 0)
-            ncc += grid[i][j-1];
+        if (iteration % 2 == 1) {
+            for (int i = firstRow; i <= lastRow; i++) {
+                for (int j = 0; j < cols; j++) {
+                    ncc = neighbourGrid[i][j];
 
-        if ((j+1) < cols)
-            ncc += grid[i][j+1];
+                    if (ncc < 2 || ncc > 3) {
+                        tempGrid[i][j] = 0;
+                    } else if (ncc == 2) {
+                        if (grid[i][j] == 1) {
+                            tempGrid[i][j] = 1;
+                        } else {
+                            tempGrid[i][j] = 0;
+                        }
+                    } else if (ncc == 3) {
+                        tempGrid[i][j] = 1;
+                    }
+                }
+            }
+        } else {
+            for (int i = firstRow; i <= lastRow; i++) {
+                for (int j = 0; j < cols; j++) {
+                    ncc = neighbourGrid[i][j];
 
-        if ((i-1) >= 0) {
-            ncc += grid[i-1][j];
-
-            if ((j-1) >= 0) 
-                ncc += grid[i-1][j-1];
-
-            if ((j+1) < cols)
-                ncc += grid[i-1][j+1];
-        }
-
-        if ((i+1) < rows) {
-            ncc += grid[i+1][j];
-            if ((j-1) >= 0)
-                ncc += grid[i+1][j-1];
-
-            if ((j+1) < cols)
-                ncc += grid[i+1][j+1];
-        }
-
-        neighbourGrid[i][j] = ncc;
-    }
-
-    public void updateCells(int firstRow, int lastRow) {
-        for (int i = firstRow; i <= lastRow; i++) {
-            for (int j = 0; j < cols; j++) {
-                int ncc = neighbourGrid[i][j];
-
-                if (ncc < 2 || ncc > 3) {
-                    newGrid[i][j] = 0;
-                    //grid[i][j] = 0;
-                } else if (ncc == 2) {
-                    if (grid[i][j] == 1)
-                        newGrid[i][j] = 1;
-                        //grid[i][j] = 1;
-                } else if (ncc == 3) {
-                    newGrid[i][j] = 1;
-                    //grid[i][j] = 1;
+                    if (ncc < 2 || ncc > 3) {
+                        grid[i][j] = 0;
+                    } else if (ncc == 2) {
+                        if (tempGrid[i][j] == 1) {
+                            grid[i][j] = 1;
+                        } else {
+                            grid[i][j] = 0;
+                        }
+                    } else if (ncc == 3) {
+                        grid[i][j] = 1;
+                    }
                 }
             }
         }
@@ -364,15 +411,28 @@ class GameOfLife {
         }
         System.out.println(".");
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < rows; j++) {
-                if (grid[i][j] == 1) {
-                    System.out.print("|O");
-                } else {
-                    System.out.print("|_");
+        if (iterNo % 2 == 1) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < rows; j++) {
+                    if (tempGrid[i][j] == 1) {
+                        System.out.print("|O");
+                    } else {
+                        System.out.print("|_");
+                    }
                 }
+                System.out.println("|");
             }
-            System.out.println("|");
+        } else {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < rows; j++) {
+                    if (grid[i][j] == 1) {
+                        System.out.print("|O");
+                    } else {
+                        System.out.print("|_");
+                    }
+                }
+                System.out.println("|");
+            }
         }
     }
 
