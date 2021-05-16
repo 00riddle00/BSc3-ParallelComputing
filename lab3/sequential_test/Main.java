@@ -1,46 +1,5 @@
-/*
- * Main.java
- * @author Tomas Giedraitis, MIF INFO 3k.
- * Lab. darbas nr. 3
- *
- * Užduotis:
- *
- * Automato "Conway's Life Game" simuliacija.
- * Pageidautina rezultatą pavaizduoti vizualiai.
- *
- * Suprojektuoti pateiktajai užduočiai (problemai) efektyvų lygiagretaus vykdymo
- * algoritmą, jį realizuoti JAVA gijomis ir ištirti sprendimo efektyvumą.
 
- * "Darbinių" gijų skaicius - programos parametras. Jos "paleidžiamos" vykdymui programos
- * pradžioje ir funkcionuoja iki pat programos pabaigos (kol užduotyje specifikuotas
- * darbas nebus atliktas).
-
- * Sąveika tarp atskirų gijų turi būti tokia, kad jos būtų maksimaliai "apkrautos". Be to
- * NELEISTINA tokia "darbo" vykdymo disciplina, kai "darbo" dalys paskirstomos atskiriems
- * "procesoriams" - gijoms iš anksto ir nekinta programos vykdymo eigoje (kitaip tariant,
- * neleistinas sinchronizacijos tarp atskirų gijų nebuvimas)
-
- * Paruošti programos vykdymą dviem režimais - derinimo režimu, kuriame programos vykdymas
- * gali būti dirbtinai sulėtintas (sleep) ir į ekraną išvedamas programos vykdymo
- * protokolas, paaiškinantis veikimo principus, bei "sparčiuoju" režimu, kuriame neturi
- * būti dirbtinių stabdymų, o programa išvestų į ekraną vykdymo trukmę. Komandinė eilutė
- * turi turėti papildomus parametrus - darbinių gijų skaičių bei "apkrovos" parametrą,
- * nusakantį darbo apimtį (pvz., tikslumas, masyvo dydis ir t.t. ).
-
- * Sparčiuoju režimu programa turi demonstruoti vykdymo spartinimą, vykdant ją
- * daugiaprocesorinėje sistemoje (http://kedras.mif.vu.lt/cluster/).
-
- * Sistemoje, kurioje testuosite savo programą, būtina įvykdyti programą TTest, kuri
- * leidžia patikrinti java programos vykdymo spartinimą, ir pateikti jos darbo rezultatus:
-
- * Eksperimentiškai nustatyti algoritmo spartinimo, plečiamumo (scaling) bei vykd. laiko
- * priklausomybės nuo "darbų" dydžio (grain size) charakteristikas. Sugebėti pagrįsti
- * gautuosius rezultatus. Atsiskaitant, pateikti (motyvuotą) sprendimo aprašą, įtraukiant
- * minetųjų priklausomybių grafikus
- *
- */
-
-//package lab3.sequential_no_print;
+//package lab3.sequential_test;
 
 import java.util.Random;
 
@@ -54,6 +13,7 @@ public class Main {
         
         GameOfLife game = new GameOfLife(rows, cols);
         game.initStage(stage);
+
         //game.printState();
        
         long start = System.currentTimeMillis();

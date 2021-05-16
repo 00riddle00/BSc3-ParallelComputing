@@ -35,7 +35,7 @@
 
  * Eksperimentiškai nustatyti algoritmo spartinimo, plečiamumo (scaling) bei vykd. laiko
  * priklausomybės nuo "darbų" dydžio (grain size) charakteristikas. Sugebėti pagrįsti
- * gautuosius rezultaþNtus. Atsiskaitant, pateikti (motyvuotą) sprendimo aprašą, įtraukiant
+ * gautuosius rezultatus. Atsiskaitant, pateikti (motyvuotą) sprendimo aprašą, įtraukiant
  * minetųjų priklausomybių grafikus
  *
  */
@@ -47,25 +47,24 @@ import java.util.Random;
 public class Main {
 
     public static void main(String[] args) {
-
-        int rows = 5;
-        int cols = 5;
-        int iterCount = 5;
-        int stage = 0;
+        int rows = 10;
+        int cols = 10;
+        int iterCount = 10;
+        int stage = 5;
         int threadCount = 5;
-        
+
         GameOfLife game = new GameOfLife(rows, cols, iterCount);
         game.initStage(stage);
 
         game.printState(true);
-
+        
         Barrier barrier = new Barrier(game, threadCount);
 
-        Worker w1 = new Worker(1, barrier, game, 0, 0);
-        Worker w2 = new Worker(2, barrier, game, 1, 1);
-        Worker w3 = new Worker(3, barrier, game, 2, 2);
-        Worker w4 = new Worker(4, barrier, game, 3, 3);
-        Worker w5 = new Worker(5, barrier, game, 4, 4);
+        Worker w1 = new Worker(1, barrier, game, 0, 1);
+        Worker w2 = new Worker(2, barrier, game, 2, 3);
+        Worker w3 = new Worker(3, barrier, game, 4, 5);
+        Worker w4 = new Worker(4, barrier, game, 6, 7);
+        Worker w5 = new Worker(5, barrier, game, 8, 9);
 
         w1.start(); 
         w2.start();
@@ -79,7 +78,6 @@ public class Main {
             w3.join();
             w4.join();
             w5.join();
-            
         } catch (InterruptedException exc) {
             exc.printStackTrace();
         }
@@ -107,9 +105,9 @@ class Barrier {
             wait();
         } else { // 3. IF everyone is connected
             if (stage == 1) {
-                game.printNeighbourGrid();
+                //game.printNeighbourGrid();
             } else if (stage == 2) {
-                game.updateGrid();
+                game.iterPassed++;
                 game.printState(true);
             }
 
@@ -144,11 +142,11 @@ class Worker extends Thread {
         try {
             for (int i = 1; i <= game.iterCount; i++) {
                 Thread.sleep(1000);
-
-                game.updateNeighbourCount(firstRow, lastRow);
+                
+                game.updateNeighbourCount(firstRow, lastRow, i);
                 //barrier.waitBarrier(1);
 
-                game.updateCells(firstRow, lastRow);
+                game.updateCells(firstRow, lastRow, i);
                 barrier.waitBarrier(2);
             }
 
@@ -162,78 +160,93 @@ class GameOfLife {
     private int rows;
     private int cols;
 
-    private int grid[][];
     private int neighbourGrid[][];
+    private int grid[][];
+    private int tempGrid[][];
     private int newGrid[][];
+    private int currGrid[][];
     public int iterCount;
+    public int iterPassed;
 
     public GameOfLife(int rows, int cols, int iterCount) {
         this.rows = rows;
         this.cols = cols;
         this.iterCount = iterCount;
         this.grid = new int[rows][cols];
-        this.newGrid = new int[rows][cols];
+        this.tempGrid = new int[rows][cols];
         this.neighbourGrid = new int[rows][cols];
     }
 
-    public void updateGrid() {
-        int temp[][] = grid;
-        grid = newGrid;
-        newGrid = temp;
-    }
+    public void updateNeighbourCount(int firstRow, int lastRow, int iteration) {
+        // neighbour cell count
+        int ncc;
 
-    public void updateNeighbourCount(int firstRow, int lastRow) {
+        if (iteration % 2 == 1) {
+            currGrid = grid;
+        } else {
+            currGrid = tempGrid;
+        }
+
         for (int i = firstRow; i <= lastRow; i++) {
             for (int j = 0; j < cols; j++) {
-                updateCellNeighbourCount(i, j);
+
+                // i = row, j = column
+                ncc = 0;
+
+                if ((j-1) >= 0)
+                    ncc += currGrid[i][j-1];
+
+                if ((j+1) < cols)
+                    ncc += currGrid[i][j+1];
+
+                if ((i-1) >= 0) {
+                    ncc += currGrid[i-1][j];
+
+                    if ((j-1) >= 0) 
+                        ncc += currGrid[i-1][j-1];
+
+                    if ((j+1) < cols)
+                        ncc += currGrid[i-1][j+1];
+                }
+
+                if ((i+1) < rows) {
+                    ncc += currGrid[i+1][j];
+                    if ((j-1) >= 0)
+                        ncc += currGrid[i+1][j-1];
+
+                    if ((j+1) < cols)
+                        ncc += currGrid[i+1][j+1];
+                }
+
+                neighbourGrid[i][j] = ncc;
             }
         }
     }
 
-    private void updateCellNeighbourCount(int i, int j) {
-        // i = row, j = column
-
+    public void updateCells(int firstRow, int lastRow, int iteration) {
         // neighbour cell count
-        int ncc = 0;
+        int ncc;
 
-        if ((j-1) >= 0)
-            ncc += grid[i][j-1];
-
-        if ((j+1) < cols)
-            ncc += grid[i][j+1];
-
-        if ((i-1) >= 0) {
-            ncc += grid[i-1][j];
-
-            if ((j-1) >= 0) 
-                ncc += grid[i-1][j-1];
-
-            if ((j+1) < cols)
-                ncc += grid[i-1][j+1];
+        if (iteration % 2 == 1) {
+            currGrid = grid;
+            newGrid = tempGrid;
+        } else {
+            currGrid = tempGrid;
+            newGrid = grid;
         }
 
-        if ((i+1) < rows) {
-            ncc += grid[i+1][j];
-            if ((j-1) >= 0)
-                ncc += grid[i+1][j-1];
-
-            if ((j+1) < cols)
-                ncc += grid[i+1][j+1];
-        }
-
-        neighbourGrid[i][j] = ncc;
-    }
-
-    public void updateCells(int firstRow, int lastRow) {
         for (int i = firstRow; i <= lastRow; i++) {
             for (int j = 0; j < cols; j++) {
-                int ncc = neighbourGrid[i][j];
+                ncc = neighbourGrid[i][j];
 
                 if (ncc < 2 || ncc > 3) {
                     newGrid[i][j] = 0;
                 } else if (ncc == 2) {
-                    if (grid[i][j] == 1)
+                    if (currGrid[i][j] == 1) {
                         newGrid[i][j] = 1;
+                    } else {
+                        newGrid[i][j] = 0;
+                    }
                 } else if (ncc == 3) {
                     newGrid[i][j] = 1;
                 }
@@ -266,15 +279,28 @@ class GameOfLife {
         }
         System.out.println(".");
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < rows; j++) {
-                if (grid[i][j] == 1) {
-                    System.out.print("|O");
-                } else {
-                    System.out.print("|_");
+        if (iterPassed % 2 == 1) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < rows; j++) {
+                    if (tempGrid[i][j] == 1) {
+                        System.out.print("|O");
+                    } else {
+                        System.out.print("|_");
+                    }
                 }
+                System.out.println("|");
             }
-            System.out.println("|");
+        } else {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < rows; j++) {
+                    if (grid[i][j] == 1) {
+                        System.out.print("|O");
+                    } else {
+                        System.out.print("|_");
+                    }
+                }
+                System.out.println("|");
+            }
         }
     }
 

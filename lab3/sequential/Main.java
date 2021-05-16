@@ -47,13 +47,15 @@ import java.util.Random;
 public class Main {
 
 	public static void main(String[] args) {
-        int rows = 5;
-        int cols = 5;
+        int rows = 10;
+        int cols = 10;
         int iterCount = 10;
-        int stage = 0;
+        int stage = 5;
         
         GameOfLife game = new GameOfLife(rows, cols);
         game.initStage(stage);
+
+        game.printState();
         game.run(iterCount);
     }
 }
@@ -124,7 +126,7 @@ class GameOfLife {
         }
     }
 
-    private void printState() {
+    public void printState() {
         for (int i = 0; i < cols; i++) {
             System.out.print("._");
         }
@@ -156,7 +158,6 @@ class GameOfLife {
             updateCells();
 
             System.out.println("\033[2J\033[H");
-
             printState();
         }
     }
