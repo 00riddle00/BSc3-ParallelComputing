@@ -5,43 +5,44 @@ import java.util.Random;
 
 public class Main {
 
-    public static void main(String[] args) {
-        // chosen parameters
-        int size = 100;
-        int iterCount = 100_000;
-        int threadCount = 10;
+   //----------------------------------------------------------
+   // Global parameters, changeable before runtime
+   static int gameGridSize = 100; 
+   static int gameStartingStage= 0;
+   //
+   // Global parameters, input by user (at runtime)
+   static int workload = 0; // Workload means no. of iterations
+   static int nThreads = 0; // Number of working threads
+   //----------------------------------------------------------
+   
+   // Make tests for given workload and number threads
+   // Returns working time
+   static double makePerformanceTest() throws Exception {
 
-        // chosen game init stage
-        int stage = 0;
+        GameOfLife game = new GameOfLife(gameGridSize, gameGridSize, workload);
+        Barrier barrier = new Barrier(game, nThreads);
 
-        GameOfLife game = new GameOfLife(size, size, iterCount);
-        Barrier barrier = new Barrier(game, threadCount);
-
-        game.initStage(stage);
+        game.initStage(gameStartingStage);
         //game.printState(false);
         
         long start = System.currentTimeMillis();
 
         // Create and start threads
-        Worker[] workerThreads = new Worker[threadCount];
+        Worker[] workerThreads = new Worker[nThreads];
 
-        int localWorkload = size / threadCount;
+        int localWorkload = gameGridSize / nThreads;
 
-        try {
-            for (int i = 0; i < threadCount; i++) {
-                (workerThreads[i] = 
-                     new Worker(i+1, barrier, game, localWorkload * i, localWorkload * (i+1) - 1)
-                 ).start();
-            }
-     
-            // Wait until all threads finish
-            for (int i = 0; i < threadCount; i++) {
-               while (!workerThreads[i].finished) {
-                  workerThreads[i].join();
-               }
-            }
-        } catch (InterruptedException exc) {
-            exc.printStackTrace();
+        for (int i = 0; i < nThreads; i++) {
+            (workerThreads[i] = 
+                 new Worker(i+1, barrier, game, localWorkload * i, localWorkload * (i+1) - 1)
+             ).start();
+        }
+ 
+        // Wait until all threads finish
+        for (int i = 0; i < nThreads; i++) {
+           while (!workerThreads[i].finished) {
+              workerThreads[i].join();
+           }
         }
 
         long finish = System.currentTimeMillis();
@@ -49,7 +50,31 @@ public class Main {
 
         game.printState(false);
 
-        System.out.println("Time: " + timeElapsed + "s");
+        //System.out.println("Time: " + timeElapsed + "s");
+        return timeElapsed;
+   }
+
+    public static void main(String[] args) {
+
+        try {
+          if (args.length < 2
+              || ! ( (nThreads  = Integer.parseInt(args[0])) >=1 && nThreads  <= 24 &&
+                     (workload = Integer.parseInt(args[1])) >=1 && workload <= 100000000))
+          {
+              System.err.println("ERROR: problem with arguments");
+          } else {
+              System.err.println("#Test for: nThreads="+nThreads+" workload="+workload);
+              double dtime = makePerformanceTest();
+              System.err.println("#Completed. Running time: " + dtime + "s");
+              System.out.println( nThreads + " " + workload  + " " +dtime );
+              System.exit(0); //>>>>>>>
+          }
+       } catch (Exception exc)
+       {
+          System.out.println(exc);
+          exc.printStackTrace();
+          System.exit(4);
+       }
     }
 }
 
