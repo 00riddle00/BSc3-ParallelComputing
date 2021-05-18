@@ -17,7 +17,7 @@ public class Main {
    
    // Make tests for given workload and number threads
    // Returns working time
-   static double makePerformanceTest() throws Exception {
+    static double makePerformanceTest() throws Exception {
 
         GameOfLife game = new GameOfLife(gameGridSize, gameGridSize, workload);
         Barrier barrier = new Barrier(game, nThreads);
@@ -34,15 +34,15 @@ public class Main {
 
         for (int i = 0; i < nThreads; i++) {
             (workerThreads[i] = 
-                 new Worker(i+1, barrier, game, localWorkload * i, localWorkload * (i+1) - 1)
-             ).start();
+                new Worker(i+1, barrier, game, localWorkload * i, localWorkload * (i+1) - 1)
+            ).start();
         }
  
         // Wait until all threads finish
         for (int i = 0; i < nThreads; i++) {
-           while (!workerThreads[i].finished) {
-              workerThreads[i].join();
-           }
+            while (!workerThreads[i].finished) {
+                workerThreads[i].join();
+            }
         }
 
         long finish = System.currentTimeMillis();
@@ -57,24 +57,23 @@ public class Main {
     public static void main(String[] args) {
 
         try {
-          if (args.length < 2
-              || ! ( (nThreads  = Integer.parseInt(args[0])) >=1 && nThreads  <= 24 &&
-                     (workload = Integer.parseInt(args[1])) >=1 && workload <= 100000000))
-          {
-              System.err.println("ERROR: problem with arguments");
-          } else {
-              System.err.println("#Test for: nThreads="+nThreads+" workload="+workload);
-              double dtime = makePerformanceTest();
-              System.err.println("#Completed. Running time: " + dtime + "s");
-              System.out.println( nThreads + " " + workload  + " " +dtime );
-              System.exit(0); //>>>>>>>
-          }
-       } catch (Exception exc)
-       {
-          System.out.println(exc);
-          exc.printStackTrace();
-          System.exit(4);
-       }
+            if (args.length < 2
+                || ! ( (nThreads  = Integer.parseInt(args[0])) >=1 && nThreads  <= 24 &&
+                       (workload = Integer.parseInt(args[1])) >=1 && workload <= 100000000))
+            {
+                System.err.println("ERROR: problem with arguments");
+            } else {
+                System.err.println("#Test for: nThreads="+nThreads+" workload="+workload);
+                double dtime = makePerformanceTest();
+                System.err.println("#Completed. Running time: " + dtime + "s");
+                System.out.println( nThreads + " " + workload  + " " +dtime );
+                System.exit(0); //>>>>>>>
+            }
+        } catch (Exception exc) {
+            System.out.println(exc);
+            exc.printStackTrace();
+            System.exit(4);
+        }
     }
 }
 
