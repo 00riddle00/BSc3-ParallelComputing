@@ -11,8 +11,8 @@ public class Main {
    static int gameStartingStage= 0;
    //
    // Global parameters, input by user (at runtime)
-   static int workload = 0; // Workload means no. of iterations
    static int nThreads = 0; // Number of working threads
+   static int workload = 0; // Workload means no. of iterations
    //----------------------------------------------------------
    
    // Make tests for given workload and number threads
@@ -55,24 +55,25 @@ public class Main {
    }
 
     public static void main(String[] args) {
-
         try {
-            if (args.length < 2
-                || ! ( (nThreads  = Integer.parseInt(args[0])) >=1 && nThreads  <= 24 &&
-                       (workload = Integer.parseInt(args[1])) >=1 && workload <= 100000000))
-            {
-                System.err.println("ERROR: problem with arguments");
+            if (args.length < 2) {
+                System.out.println("ERROR: Too few arguments");
+                System.exit(1);
+            } else if (! ((nThreads = Integer.parseInt(args[0])) >=1 && nThreads <= 24 && 
+                          (workload = Integer.parseInt(args[1])) >=1 && workload <= 100000000)) {
+                System.out.println("ERROR: problem with arguments");
+                System.exit(1);
             } else {
                 System.err.println("#Test for: nThreads="+nThreads+" workload="+workload);
                 double dtime = makePerformanceTest();
                 System.err.println("#Completed. Running time: " + dtime + "s");
                 System.out.println( nThreads + " " + workload  + " " +dtime );
-                System.exit(0); //>>>>>>>
+                System.exit(0);
             }
         } catch (Exception exc) {
             System.out.println(exc);
             exc.printStackTrace();
-            System.exit(4);
+            System.exit(1);
         }
     }
 }
